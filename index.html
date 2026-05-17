@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Анти ИИ Механик</title>
+    
+    <!-- ✅ FAVICON: ваш файл + резервная заглушка -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+    
+    <!-- Заглушка если favicon не найден -->
+    <script>
+        window.addEventListener('error', function(e) {
+            if (e.target.tagName === 'LINK' && e.target.rel === 'icon') {
+                const fallback = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🧩</text></svg>';
+                document.querySelector('link[rel="icon"]').href = fallback;
+            }
+        }, true);
+    </script>
+    
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #050512; font-family: sans-serif; touch-action: none; }
+        #game-container { position: relative; width: 100vw; height: 100vh; max-width: 56.25vh; max-height: 177.77vw; margin: 0 auto; background: #010105; overflow: hidden; }
+        canvas { display: block; width: 100%; height: 100%; }
+        .ui { position: absolute; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); z-index: 10; font-family: monospace; text-align: center; pointer-events: none; }
+        
+        /* === ✅ ЛОГОТИП ПО ЦЕНТРУ ВВЕРХУ (на ВСЕХ страницах) === */
+        #logo { 
+            top: 12px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            font-size: 15px; 
+            font-weight: 900; 
+            color: #00ffaa; 
+            letter-spacing: 2px; 
+            display: flex; 
+            align-items: center; 
+            gap: 7px;
+            z-index: 999; /* Поверх всего */
+            animation: logoPulse 2s ease-in-out infinite;
+        }
+        #logo img { 
+            width: 22px; 
+            height: 22px; 
+            filter: drop-shadow(0 0 8px #00ffaa) drop-shadow(0 0 15px #00ffaa66);
+        }
+        @keyframes logoPulse {
+            0%, 100% { text-shadow: 0 0 10px #00ffaa88; }
+            50% { text-shadow: 0 0 25px #00ffaa, 0 0 50px #00ffaa44; }
+        }
+        
+        #task { top: 48px; left: 0; width: 100%; font-size: 13px; color: #ffaa00; font-weight: bold; text-transform: uppercase; }
+        
+        /* === ✅ СТАРТОВЫЙ ЭКРАН С ПОДДЕРЖКОЙ === */
+        #overlay { 
+            position: absolute; 
+            top: 0; left: 0; width: 100%; height: 100%; 
+            background: linear-gradient(135deg, rgba(5,5,18,0.98) 0%, rgba(10,5,25,0.98) 100%);
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            z-index: 20; 
+            color: #fff;
+            padding: 70px 15px 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        #overlay::-webkit-scrollbar { display: none; }
+        
+        #m-title { 
+            color:#00ffaa; 
+            text-align:center; 
+            margin:0 0 15px 0; 
+            font-size: 20px;
+            text-shadow: 0 0 15px #00ffaa88;
+        }
+        #overlay > p { 
+            color:#aaa; 
+            text-align:center; 
+            max-width:80%; 
+            font-size:13px; 
+            margin:0 0 20px 0; 
+            line-height:1.4; 
+        }
+        
+        /* === ✨ БЛОК ПОДДЕРЖКИ ПРОЕКТА (только на старте) === */
+        #support-box {
+            background: rgba(10, 15, 40, 0.9);
+            border: 2px solid #6699ff;
+            border-radius: 16px;
+            padding: 18px 15px;
+            max-width: 320px;
+            width: 100%;
+            margin: 0 0 20px 0;
+            box-shadow: 0 0 25px rgba(102, 153, 255, 0.3);
+            animation: pulseBorder 3s ease-in-out infinite;
+        }
+        @keyframes pulseBorder {
+            0%, 100% { box-shadow: 0 0 25px rgba(102, 153, 255, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(102, 153, 255, 0.6); }
+        }
+        #support-box h3 {
+            color: #6699ff;
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            text-align: center;
+            text-shadow: 0 0 10px #6699ff88;
+        }
+        #support-box p {
+            color: #ccc;
+            font-size: 12px;
+            line-height: 1.5;
+            margin: 7px 0;
+            text-align: center;
+        }
+        .heart {
+            color: #ff6699;
+            font-size: 18px;
+            display: block;
+            text-align: center;
+            margin: 8px 0;
+            animation: heartbeat 1.5s ease-in-out infinite;
+        }
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+        .phone-block {
+            background: rgba(0, 30, 60, 0.8);
+            border-radius: 10px;
+            padding: 10px;
+            margin: 12px 0;
+            border: 1px solid #00aaff44;
+        }
+        .phone-block strong {
+            color: #00ffaa;
+            font-size: 16px;
+            letter-spacing: 1px;
+            display: block;
+            text-align: center;
+            margin-bottom: 7px;
+            font-family: monospace;
+        }
+        .copy-btn {
+            display: block;
+            width: 100%;
+            padding: 9px;
+            background: linear-gradient(135deg, #00aaff, #0066cc);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 4px;
+            pointer-events: auto;
+        }
+        .copy-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(0, 170, 255, 0.4);
+        }
+        .copy-btn:active { transform: translateY(0); }
+        .copy-btn.copied { background: linear-gradient(135deg, #00cc88, #009966); }
+        .note {
+            color: #888;
+            font-size: 10px;
+            text-align: center;
+            margin-top: 7px;
+            line-height: 1.4;
+        }
+        .note span { color: #00ffaa; }
+        .catalog-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #ffcc66;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 10px 16px;
+            background: rgba(255, 204, 102, 0.15);
+            border: 2px solid #ffcc66;
+            border-radius: 22px;
+            margin: 8px 0 18px 0;
+            transition: all 0.3s;
+            text-align: center;
+            pointer-events: auto;
+        }
+        .catalog-link:hover {
+            background: rgba(255, 204, 102, 0.3);
+            transform: scale(1.02);
+            box-shadow: 0 0 18px rgba(255, 204, 102, 0.4);
+        }
+        .catalog-link::before { content: "🌟"; font-size: 14px; }
+        
+        .btn { 
+            padding: 14px 38px; 
+            font-size: 15px; 
+            font-weight: bold; 
+            color: #fff; 
+            background: linear-gradient(45deg, #ff0055, #aa00ff); 
+            border: none; 
+            border-radius: 25px; 
+            cursor: pointer; 
+            box-shadow: 0 0 15px rgba(255,0,85,0.4); 
+            pointer-events: auto; 
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+        .btn:hover { transform: scale(1.03); box-shadow: 0 0 25px rgba(255,0,85,0.7); }
+        
+        /* === КНОПКИ УПРАВЛЕНИЯ === */
+        #controls { position: absolute; bottom: 35px; left: 0; width: 100%; display: flex; justify-content: space-around; padding: 0 15px; box-sizing: border-box; z-index: 10; }
+        .ctrl-btn { width: 65px; height: 65px; background: rgba(255,255,255,0.04); border: 2px solid rgba(255,255,255,0.15); border-radius: 50%; color: #fff; font-size: 22px; font-weight: bold; display: flex; justify-content: center; align-items: center; user-select: none; pointer-events: auto; }
+        .ctrl-btn:active { background: rgba(255,255,255,0.15); }
+        
+        /* === ЭКРАН ПОБЕДЫ === */
+        #overlay.win { animation: winFlash 0.5s ease-out; }
+        @keyframes winFlash {
+            0% { background: rgba(5,5,18,0.95); }
+            50% { background: radial-gradient(ellipse at center, rgba(0,255,170,0.3) 0%, rgba(5,5,18,0.95) 70%); }
+            100% { background: radial-gradient(ellipse at center, rgba(0,255,170,0.15) 0%, rgba(5,5,18,0.95) 70%); }
+        }
+        
+        /* === СКРЫТИЕ СКРОЛЛБАРА === */
+        * { scrollbar-width: none; -ms-overflow-style: none; }
+        *::-webkit-scrollbar { display: none; }
+        
+        /* === АДАПТИВ === */
+        @media (max-width: 400px) {
+            #logo { font-size: 13px; top: 10px; }
+            #logo img { width: 20px; height: 20px; }
+            #support-box { padding: 15px 12px; }
+            .phone-block strong { font-size: 15px; }
+            .btn { padding: 12px 32px; font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    
+    <!-- ✅ ЛОГОТИП ПО ЦЕНТРУ ВВЕРХУ (на ВСЕХ страницах) -->
+    <div id="logo" class="ui">
+        <img src="favicon.ico" alt="Logo" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧩</text></svg>'">
+        <span>ANTI AI MECHANIC</span>
+    </div>
+    
+    <div id="task" class="ui">Загрузка чертежей...</div>
+
+    <!-- ✅ СТАРТОВЫЙ ЭКРАН С БЛОКОМ ПОДДЕРЖКИ (только страница 1) -->
+    <div id="overlay">
+        <h2 id="m-title">УРОВЕНЬ 1: ДВИГАТЕЛЬ</h2>
+        <p>ИИ создал чертеж, но собрать работающий узел может только человек. Совместите детали с контуром!</p>
+        
+        <!-- ✨ БЛОК ПОДДЕРЖКИ ПРОЕКТА -->
+        <div id="support-box">
+            <h3>🤝 ПОДДЕРЖАТЬ ПРОЕКТ</h3>
+            <span class="heart">💙</span>
+            <p>Приложение бесплатное. Было и останется.</p>
+            <p>Если проект помог вам или вашим близким — можете поддержать разработку добровольным переводом.</p>
+            
+            <div class="phone-block">
+                <strong>📱 8-920-227-56-76</strong>
+                <button class="copy-btn" id="copyPhone" onclick="copyPhone()">📋 Копировать номер</button>
+                <p class="note">✅ Деньги придут мгновенно. <span>Без комиссии.</span> Безопасно.</p>
+            </div>
+            
+            <p class="heart">❤️ Спасибо за поддержку!</p>
+            
+            <a href="https://ancf-hue.github.io/" target="_blank" class="catalog-link">
+                Каталог бесплатных офлайн-приложений Anti-AI Shield
+            </a>
+        </div>
+        
+        <button id="act-btn" class="btn">НАЧАТЬ СБОРКУ</button>
+    </div>
+
+    <div id="controls">
+        <div class="ctrl-btn" id="b-left">◀</div>
+        <div class="ctrl-btn" id="b-down">▼</div>
+        <div class="ctrl-btn" id="b-right">▶</div>
+    </div>
+</div>
+
+<script>
+    // ================== КОПИРОВАНИЕ НОМЕРА ==================
+    function copyPhone() {
+        const phone = '8-920-227-56-76';
+        navigator.clipboard.writeText(phone).then(() => {
+            const btn = document.getElementById('copyPhone');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '✅ Скопировано!';
+            btn.classList.add('copied');
+            setTimeout(() => { btn.innerHTML = originalText; btn.classList.remove('copied'); }, 2000);
+        }).catch(err => {
+            // Фолбэк для старых браузеров
+            const textarea = document.createElement('textarea');
+            textarea.value = phone;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            const btn = document.getElementById('copyPhone');
+            btn.innerHTML = '✅ Скопировано!';
+            btn.classList.add('copied');
+            setTimeout(() => { btn.innerHTML = '📋 Копировать номер'; btn.classList.remove('copied'); }, 2000);
+        });
+    }
+
+    const container = document.getElementById('game-container');
+    const overlay = document.getElementById('overlay');
+    const actBtn = document.getElementById('act-btn');
+    const mTitle = document.getElementById('m-title');
+    const taskText = document.getElementById('task');
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    container.appendChild(canvas);
+
+    let isPlaying = false;
+    let isFinished = false;
+    let lastTime = 0;
+    let animTime = 0;
+
+    let stage = 0;
+    const TASKS = ["Установите коленвал", "Установите шатун", "Установите поршень", "Двигатель запущен!"];
+    const COLORS = ["#ffaa00", "#00ff88", "#0088ff", "#00ffaa"];
+
+    let player = { x: -1.8, y: -2.5, scale: 1 };
+
+    // === ✨ ГРАФИКА: частицы и звёзды ===
+    let particles = [];
+    let sparkTimer = 0;
+    let bgStars = [];
+    for(let i=0; i<80; i++) {
+        bgStars.push({
+            x: Math.random() * 2 - 1,
+            y: Math.random() * 2 - 1,
+            z: Math.random() * 3 + 1,
+            size: Math.random() * 0.02 + 0.01,
+            twinkle: Math.random() * Math.PI * 2
+        });
+    }
+
+    // ================== ИСПРАВЛЕННЫЙ ЗВУК ==================
+    let audioEnabled = false;
+    let audioCtx = null;
+    
+    // Функция инициализации звука
+    function initAudio() {
+        if(!audioCtx) {
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                audioEnabled = true;
+                
+                // Возобновляем контекст
+                if(audioCtx.state === 'suspended') {
+                    audioCtx.resume().then(() => {
+                        console.log('Audio enabled');
+                        // Пробный звук для активации
+                        playSound('k');
+                    }).catch(e => console.warn('Audio resume error:', e));
+                }
+            } catch(e) {
+                console.warn('Web Audio API not supported:', e);
+                audioEnabled = false;
+            }
+        } else if(audioCtx.state === 'suspended') {
+            audioCtx.resume().then(() => {
+                playSound('k');
+            }).catch(e => console.warn('Audio resume error:', e));
+        }
+    }
+    
+    // Исправленная функция звука
+    function playSound(type) {
+        if(!audioEnabled || !audioCtx) return;
+        
+        // Возобновляем контекст, если он приостановлен
+        if(audioCtx.state === 'suspended') {
+            audioCtx.resume();
+            return;
+        }
+        
+        try {
+            let o = audioCtx.createOscillator();
+            let g = audioCtx.createGain();
+            o.connect(g);
+            g.connect(audioCtx.destination);
+            let now = audioCtx.currentTime;
+            
+            switch(type) {
+                case 'k': // клик
+                    o.type = 'triangle';
+                    o.frequency.setValueAtTime(180, now);
+                    g.gain.setValueAtTime(0.08, now);
+                    g.gain.exponentialRampToValueAtTime(0.01, now + 0.04);
+                    o.start(now);
+                    o.stop(now + 0.04);
+                    break;
+                case 's': // успех
+                    o.type = 'sine';
+                    o.frequency.setValueAtTime(350, now);
+                    o.frequency.setValueAtTime(550, now + 0.06);
+                    g.gain.setValueAtTime(0.12, now);
+                    g.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                    o.start(now);
+                    o.stop(now + 0.2);
+                    break;
+                case 'e': // ошибка
+                    o.type = 'sawtooth';
+                    o.frequency.setValueAtTime(100, now);
+                    g.gain.setValueAtTime(0.1, now);
+                    g.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    o.start(now);
+                    o.stop(now + 0.1);
+                    break;
+                case 'm': // мотор
+                    o.type = 'triangle';
+                    o.frequency.setValueAtTime(50, now);
+                    g.gain.setValueAtTime(0.15, now);
+                    g.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                    o.start(now);
+                    o.stop(now + 0.05);
+                    break;
+            }
+        } catch(e) {
+            console.warn('Sound error:', e);
+        }
+    }
+
+    // Автоматическая инициализация звука при первом взаимодействии
+    function setupAutoAudio() {
+        const enableAudioOnInteraction = () => {
+            initAudio();
+            document.body.removeEventListener('touchstart', enableAudioOnInteraction);
+            document.body.removeEventListener('click', enableAudioOnInteraction);
+        };
+        document.body.addEventListener('touchstart', enableAudioOnInteraction);
+        document.body.addEventListener('click', enableAudioOnInteraction);
+    }
+    setupAutoAudio();
+
+    function createParticles(x, y, color, count = 12) {
+        for(let i=0; i<count; i++) {
+            particles.push({
+                x: x, y: y,
+                vx: (Math.random() - 0.5) * 0.8,
+                vy: (Math.random() - 0.5) * 0.8 - 0.3,
+                life: 1,
+                color: color,
+                size: Math.random() * 4 + 2
+            });
+        }
+    }
+
+    function drawParticles() {
+        for(let i = particles.length - 1; i >= 0; i--) {
+            let p = particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life -= 0.03;
+            p.vy += 0.02;
+            if(p.life <= 0) { particles.splice(i, 1); continue; }
+            let screenPos = project(p.x, p.y, 0);
+            ctx.beginPath();
+            ctx.arc(screenPos.x, screenPos.y, p.size * p.life, 0, Math.PI * 2);
+            ctx.fillStyle = p.color + Math.floor(p.life * 255).toString(16).padStart(2, '0');
+            ctx.fill();
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = p.color;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        }
+    }
+
+    function drawSparks() {
+        sparkTimer++;
+        if(sparkTimer % 8 === 0 && isFinished) {
+            let sparkX = (Math.random() - 0.5) * 0.4;
+            let sparkY = 0.8 + Math.sin(animTime) * 0.1;
+            createParticles(sparkX, sparkY, '#ffaa00', 3);
+        }
+    }
+
+    function drawStarfield(time) {
+        bgStars.forEach(star => {
+            star.twinkle += 0.05;
+            let twinkle = 0.5 + Math.sin(star.twinkle) * 0.5;
+            let pos = project(star.x * 3, star.y * 3, star.z * 2);
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, star.size * pos.s * 15 * twinkle, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(200, 220, 255, ${0.3 + twinkle * 0.4})`;
+            ctx.fill();
+        });
+    }
+
+    function drawNeonGlow(x, y, w, h, color, intensity = 0.6) {
+        let pos = project(x, y, 0);
+        let sizeW = w * pos.s;
+        let sizeH = h * pos.s;
+        for(let i = 3; i > 0; i--) {
+            ctx.shadowBlur = 15 * i;
+            ctx.shadowColor = color;
+            ctx.globalAlpha = intensity * (0.3 / i);
+            ctx.fillRect(pos.x - sizeW/2 - i*2, pos.y - sizeH/2 - i*2, sizeW + i*4, sizeH + i*4);
+        }
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1;
+    }
+
+    function project(x, y, z) {
+        let fov = 380, dst = 9;
+        let s = fov / (dst + z);
+        return { x: canvas.width / 2 + x * s, y: canvas.height * 0.52 - y * s, s: s };
+    }
+
+    function rotY(v, a) {
+        return { 
+            x: v.x * Math.cos(a) + v.z * Math.sin(a), 
+            y: v.y,
+            z: -v.x * Math.sin(a) + v.z * Math.cos(a) 
+        };
+    }
+
+    function drawCube(x, y, z, w, h, d, color, ay = 0, isWire = false) {
+        let verts = [
+            {x:-w/2, y:-h/2, z:-d/2}, {x:w/2, y:-h/2, z:-d/2},
+            {x:w/2, y:h/2, z:-d/2},   {x:-w/2, y:h/2, z:-d/2},
+            {x:-w/2, y:-h/2, z:d/2},  {x:w/2, y:-h/2, z:d/2},
+            {x:w/2, y:h/2, z:d/2},    {x:-w/2, y:h/2, z:d/2}
+        ];
+        let p = verts.map(v => {
+            let r = rotY(v, ay);
+            return project(x + r.x, y + r.y, z + r.z);
+        });
+        let faces = [
+            [0,1,2,3,0.1], [1,5,6,2,0.2], [5,4,7,6,0.3],
+            [4,0,3,7,0.2], [3,2,6,7,0.4], [4,5,1,0,0.1]
+        ];
+        if(!isWire && Math.abs(x - player.x) < 0.1 && Math.abs(y - player.y) < 0.1 && isPlaying && !isFinished) {
+            drawNeonGlow(x, y, w, h, color, 0.8);
+        }
+        faces.forEach(f => {
+            ctx.beginPath(); ctx.moveTo(p[f[0]].x, p[f[0]].y);
+            for(let i=1; i<4; i++) ctx.lineTo(p[f[i]].x, p[f[i]].y);
+            ctx.closePath();
+            if(isWire) {
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 1.5;
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = color;
+                ctx.globalAlpha = 0.6;
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+                ctx.globalAlpha = 1;
+            } else {
+                let grad = ctx.createLinearGradient(p[0].x, p[0].y, p[2].x, p[2].y);
+                grad.addColorStop(0, color);
+                grad.addColorStop(0.5, lightenColor(color, 30));
+                grad.addColorStop(1, color);
+                ctx.fillStyle = grad;
+                ctx.fill();
+                ctx.fillStyle = `rgba(0,0,0,${f[4]})`;
+                ctx.fill();
+                ctx.fillStyle = 'rgba(255,255,255,0.15)';
+                ctx.beginPath();
+                ctx.moveTo(p[0].x + 3, p[0].y + 3);
+                ctx.lineTo(p[1].x - 3, p[1].y + 3);
+                ctx.lineTo(p[2].x - 5, p[2].y - 3);
+                ctx.lineTo(p[3].x + 3, p[3].y - 3);
+                ctx.closePath();
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+        });
+    }
+
+    function lightenColor(hex, percent) {
+        let num = parseInt(hex.slice(1), 16);
+        let amt = Math.round(2.55 * percent);
+        let R = Math.min(255, (num >> 16) + amt);
+        let G = Math.min(255, (num >> 8 & 0x00FF) + amt);
+        let B = Math.min(255, (num & 0x0000FF) + amt);
+        return `rgb(${R},${G},${B})`;
+    }
+
+    function darkenColor(hex, percent) {
+        let num = parseInt(hex.slice(1), 16);
+        let amt = Math.round(2.55 * percent);
+        let R = Math.max(0, (num >> 16) - amt);
+        let G = Math.max(0, (num >> 8 & 0x00FF) - amt);
+        let B = Math.max(0, (num & 0x0000FF) - amt);
+        return `rgb(${R},${G},${B})`;
+    }
+
+    function drawCyl(x, y, r, h, color, ay = 0, isWire = false) {
+        let steps = 20;
+        for(let j=0; j<steps; j++) {
+            let a1 = (j/steps)*Math.PI*2, a2 = ((j+1)/steps)*Math.PI*2;
+            let v1 = rotY({x:r*Math.cos(a1), y:-h/2, z:r*Math.sin(a1)}, ay);
+            let v2 = rotY({x:r*Math.cos(a2), y:-h/2, z:r*Math.sin(a2)}, ay);
+            let v3 = rotY({x:r*Math.cos(a2), y:h/2, z:r*Math.sin(a2)}, ay);
+            let v4 = rotY({x:r*Math.cos(a1), y:h/2, z:r*Math.sin(a1)}, ay);
+            let p1 = project(x+v1.x, y+v1.y, v1.z), p2 = project(x+v2.x, y+v2.y, v2.z);
+            let p3 = project(x+v3.x, y+v3.y, v3.z), p4 = project(x+v4.x, y+v4.y, v4.z);
+            ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y);
+            ctx.lineTo(p3.x, p3.y); ctx.lineTo(p4.x, p4.y); ctx.closePath();
+            if(isWire) {
+                let pulse = 0.6 + Math.sin(animTime * 3 + j) * 0.2;
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 1.5 * pulse;
+                ctx.shadowBlur = 10 * pulse;
+                ctx.shadowColor = color;
+                ctx.globalAlpha = 0.5 * pulse;
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+                ctx.globalAlpha = 1;
+            } else {
+                let grad = ctx.createRadialGradient(
+                    (p1.x+p3.x)/2, (p1.y+p3.y)/2, 0,
+                    (p1.x+p3.x)/2, (p1.y+p3.y)/2, Math.abs(p3.x-p1.x)
+                );
+                grad.addColorStop(0, lightenColor(color, 40));
+                grad.addColorStop(0.5, color);
+                grad.addColorStop(1, darkenColor(color, 30));
+                ctx.fillStyle = grad;
+                ctx.fill();
+                ctx.fillStyle = `rgba(0,0,0,${0.3 * Math.abs(Math.sin(a1))})`;
+                ctx.fill();
+                ctx.fillStyle = 'rgba(255,255,255,0.1)';
+                ctx.beginPath();
+                ctx.ellipse((p1.x+p2.x)/2, (p1.y+p4.y)/2, Math.abs(p2.x-p1.x)*0.3, Math.abs(p4.y-p1.y)*0.8, 0, 0, Math.PI*2);
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+                ctx.lineWidth = 0.8;
+                ctx.stroke();
+            }
+        }
+        if(!isWire) {
+            drawCylCap(x, y - h/2, r, color, ay);
+            drawCylCap(x, y + h/2, r, color, ay);
+        }
+    }
+
+    function drawCylCap(x, y, r, color, ay) {
+        let steps = 16;
+        ctx.beginPath();
+        for(let j=0; j<=steps; j++) {
+            let a = (j/steps)*Math.PI*2;
+            let v = rotY({x:r*Math.cos(a), y:0, z:r*Math.sin(a)}, ay);
+            let p = project(x+v.x, y+v.y, v.z);
+            if(j===0) ctx.moveTo(p.x, p.y);
+            else ctx.lineTo(p.x, p.y);
+        }
+        ctx.closePath();
+        let grad = ctx.createRadialGradient(
+            project(x, y, 0).x, project(x, y, 0).y, 0,
+            project(x, y, 0).x, project(x, y, 0).y, r * project(x, y, r).s
+        );
+        grad.addColorStop(0, lightenColor(color, 50));
+        grad.addColorStop(0.7, color);
+        grad.addColorStop(1, darkenColor(color, 20));
+        ctx.fillStyle = grad;
+        ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.2)';
+        ctx.beginPath();
+        ctx.ellipse(project(x, y, 0).x - 3, project(x, y, 0).y - 2, 5, 3, 0.3, 0, Math.PI*2);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+    }
+
+    function drawAtmosphere(time) {
+        let grad = ctx.createRadialGradient(
+            canvas.width/2, canvas.height*0.6, 0,
+            canvas.width/2, canvas.height*0.6, canvas.width*0.8
+        );
+        let pulse = 0.02 + Math.sin(time * 0.0003) * 0.01;
+        grad.addColorStop(0, `rgba(10, 15, 40, ${0.3 + pulse})`);
+        grad.addColorStop(0.5, `rgba(5, 5, 20, ${0.5 + pulse*0.5})`);
+        grad.addColorStop(1, 'rgba(1, 1, 5, 0.9)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    let lastSnd = 0;
+    function render(ts) {
+        if(!lastTime) lastTime = ts;
+        let dt = (ts - lastTime) / 1000;
+        lastTime = ts;
+        
+        // Обновляем размер canvas
+        if(canvas.width !== container.clientWidth || canvas.height !== container.clientHeight) {
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+        
+        drawAtmosphere(ts);
+        drawStarfield(ts);
+        let viewAngle = Math.sin(ts * 0.0005) * 0.1 + 0.3;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = 'rgba(0, 255, 170, 0.4)';
+        drawCyl(0, 1.4, 0.8, 2.0, 'rgba(0,255,170,0.08)', viewAngle, true);
+        ctx.shadowBlur = 0;
+        let cY = -1.1, rY = -1.1, pY = 0.8, cRot = viewAngle;
+        if(isFinished) {
+            animTime += dt * 8;
+            cRot = animTime;
+            let r = 0.55, l = 1.5;
+            cY = -1.1 + r * Math.sin(animTime);
+            let cX = r * Math.cos(animTime);
+            pY = -1.1 + r * Math.sin(animTime) + Math.sqrt(l*l - cX*cX);
+            rY = pY;
+            if(ts - lastSnd > 130) { playSound('m'); lastSnd = ts; }
+            drawSparks();
+        }
+        if(!isFinished && isPlaying) {
+            let pulse = 0.5 + Math.sin(ts * 0.004) * 0.3;
+            if(stage === 0) {
+                ctx.globalAlpha = 0.12 + pulse * 0.08;
+                drawCube(0, -1.1, 0, 1.3, 0.25, 0.4, 'rgba(255,170,0,0.2)', viewAngle);
+                ctx.globalAlpha = 1;
+            }
+            if(stage === 1) {
+                ctx.globalAlpha = 0.12 + pulse * 0.08;
+                drawCube(0, -0.15, 0, 0.15, 1.4, 0.15, 'rgba(0,255,136,0.2)', viewAngle);
+                ctx.globalAlpha = 1;
+            }
+            if(stage === 2) {
+                ctx.globalAlpha = 0.12 + pulse * 0.08;
+                drawCyl(0, 0.8, 0.76, 0.7, 'rgba(0,136,255,0.2)', viewAngle);
+                ctx.globalAlpha = 1;
+            }
+        }
+        if(stage > 0 || isFinished) {
+            if(isFinished) { ctx.shadowBlur = 20; ctx.shadowColor = '#ffaa00'; }
+            drawCube(0, cY, 0, 1.3, 0.25, 0.4, '#ffaa00', cRot);
+            ctx.shadowBlur = 0;
+        }
+        if(stage > 1 || isFinished) {
+            if(isFinished) {
+                let pBot = project(0.55*Math.cos(animTime), -1.1 + 0.55*Math.sin(animTime), 0);
+                let pTop = project(0, pY - 0.3, 0);
+                let grad = ctx.createLinearGradient(pBot.x, pBot.y, pTop.x, pTop.y);
+                grad.addColorStop(0, '#00ff88');
+                grad.addColorStop(0.5, '#00ffcc');
+                grad.addColorStop(1, '#00ff88');
+                ctx.strokeStyle = grad;
+                ctx.lineWidth = 6;
+                ctx.lineCap = 'round';
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#00ff88';
+                ctx.beginPath(); ctx.moveTo(pBot.x, pBot.y); ctx.lineTo(pTop.x, pTop.y); ctx.stroke();
+                ctx.shadowBlur = 0;
+            } else {
+                drawCube(0, -0.15, 0, 0.15, 1.4, 0.15, '#00ff88', viewAngle);
+            }
+        }
+        if(stage > 2 || isFinished) {
+            if(isFinished) { ctx.shadowBlur = 20; ctx.shadowColor = '#0088ff'; }
+            drawCyl(0, pY, 0.76, 0.7, '#0088ff', viewAngle);
+            ctx.shadowBlur = 0;
+        }
+        if(isPlaying && !isFinished) {
+            let pAngle = viewAngle + Math.sin(ts * 0.003) * 0.12;
+            let float = Math.sin(ts * 0.002) * 0.05;
+            if(stage === 0) {
+                drawNeonGlow(player.x, player.y + float, 1.3, 0.25, '#ffaa00', 0.5);
+                drawCube(player.x, player.y + float, 0, 1.3, 0.25, 0.4, '#ffaa00', pAngle);
+            }
+            if(stage === 1) {
+                drawNeonGlow(player.x, player.y + float, 0.15, 1.4, '#00ff88', 0.5);
+                drawCube(player.x, player.y + float, 0, 0.15, 1.4, 0.15, '#00ff88', pAngle);
+            }
+            if(stage === 2) {
+                drawNeonGlow(player.x, player.y + float, 0.76, 0.7, '#0088ff', 0.5);
+                drawCyl(player.x, player.y + float, 0.76, 0.7, '#0088ff', pAngle);
+            }
+        }
+        drawParticles();
+        requestAnimationFrame(render);
+    }
+
+    function mLeft() { 
+        if(isPlaying && !isFinished){ 
+            player.x -= 0.35; 
+            playSound('k'); 
+            createParticles(player.x, player.y, COLORS[stage], 4); 
+        } 
+    }
+    
+    function mRight(){ 
+        if(isPlaying && !isFinished){ 
+            player.x += 0.35; 
+            playSound('k'); 
+            createParticles(player.x, player.y, COLORS[stage], 4); 
+        } 
+    }
+    
+    function mDown() {
+        if(!isPlaying || isFinished) return;
+        let targetX = 0;
+        let targetY = (stage === 0) ? -1.1 : (stage === 1) ? -0.15 : 0.8;
+        let dist = Math.abs(player.x - targetX);
+        if(dist < 0.45) {
+            let steps = 10, s = 0;
+            function snapAnim() {
+                s++;
+                player.x += (targetX - player.x) * 0.4;
+                player.y += (targetY - player.y) * 0.4;
+                if(s < steps) {
+                    setTimeout(snapAnim, 20);
+                } else {
+                    playSound('s');
+                    createParticles(targetX, targetY, COLORS[stage], 20);
+                    stage++;
+                    if(stage === 3) {
+                        isFinished = true;
+                        taskText.innerHTML = TASKS[3];
+                        taskText.style.color = COLORS[3];
+                        for(let i=0; i<5; i++) {
+                            setTimeout(() => createParticles(
+                                (Math.random()-0.5)*0.8, 
+                                0.8 + Math.random()*0.4, 
+                                ['#ffaa00','#00ff88','#0088ff','#ff66aa'][i%4], 
+                                8
+                            ), i*100);
+                        }
+                        setTimeout(showWin, 3000);
+                    } else {
+                        taskText.innerHTML = `Задание: ${TASKS[stage]}`;
+                        taskText.style.color = COLORS[stage];
+                        resetPlayerPart();
+                    }
+                }
+            }
+            snapAnim();
+        } else {
+            playSound('e');
+            createParticles(player.x, player.y, '#ff4444', 10);
+            player.x = -1.6; player.y = -2.5;
+        }
+    }
+
+    function resetPlayerPart() {
+        player.x = -1.6;
+        player.y = (stage === 0) ? -2.5 : (stage === 1) ? -2.2 : -1.8;
+    }
+
+    document.getElementById('b-left').addEventListener('pointerdown', mLeft);
+    document.getElementById('b-right').addEventListener('pointerdown', mRight);
+    document.getElementById('b-down').addEventListener('pointerdown', mDown);
+
+    window.addEventListener('keydown', (e) => {
+        if(e.key === 'ArrowLeft') mLeft();
+        if(e.key === 'ArrowRight') mRight();
+        if(e.key === 'ArrowDown') mDown();
+    });
+
+    function start() {
+        // Инициализируем звук при старте игры
+        initAudio();
+        
+        overlay.style.display = 'none';
+        stage = 0;
+        isFinished = false;
+        isPlaying = true;
+        taskText.innerHTML = `Задание: ${TASKS[0]}`;
+        taskText.style.color = COLORS[0];
+        resetPlayerPart();
+        particles = [];
+    }
+
+    function showWin() {
+        isPlaying = false;
+        mTitle.innerHTML = "УЗЕЛ УСПЕШНО СОБРАН!<br><span style='font-size:14px;color:#00ff88;'>Механика работает стабильно, ИИ повержен!</span>";
+        actBtn.innerText = "СОБРАТЬ ЕЩЕ РАЗ";
+        overlay.style.display = 'flex';
+        overlay.classList.add('win');
+    }
+
+    actBtn.addEventListener('click', start);
+    
+    // Обработчик изменения размера окна
+    window.addEventListener('resize', () => {
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
+    });
+    
+    // Запускаем рендер
+    requestAnimationFrame(render);
+</script>
+</body>
+</html>
