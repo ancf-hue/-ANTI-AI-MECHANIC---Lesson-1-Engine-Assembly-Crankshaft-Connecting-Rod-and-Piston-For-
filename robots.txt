@@ -1,0 +1,18 @@
+# robots.txt для ANTI AI MECHANIC
+# https://1-six-sooty-73.vercel.app/
+
+User-agent: *
+Allow: /
+
+# Запрещаем индексацию служебных страниц
+Disallow: /cdn-cgi/
+Disallow: /favicon.ico
+
+# Указываем путь к карте сайта
+Sitemap: https://1-six-sooty-73.vercel.app/sitemap.xml
+
+# Хост (для поисковых систем, поддерживающих эту директиву)
+Host: https://1-six-sooty-73.vercel.app
+
+# Задержка между запросами (для уважающих роботов)
+Crawl-delay: 1
